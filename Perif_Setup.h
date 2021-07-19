@@ -9,9 +9,10 @@
 #define PERIF_SETUP_H_
 #include "F28x_Project.h"
 
-//void Setup_GPIO(void); //contem codigo para piscar os dois leds
-void Setup_GPIO_Red(void);
-void Setup_GPIO_Blue(void);
+void Setup_GPIO_RED(void) ;
 
+void Setup_GPIO_Blue(void) ;
+
+void Setup_DAC (void);
 
 #endif /* PERIF_SETUP_H_ */
