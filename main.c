@@ -1,5 +1,3 @@
-
-
 #include "Perif_Setup.h"
 
 //#include "math.h"             //somente para uso de comandos seno, coseno, etc.

@@ -2,7 +2,7 @@
  * Perif_Setup.h
  *
  *  Created on: 6 de jul de 2021
- *      Author: paulo
+ *      Author: paulo e wellington
  */
 
 #ifndef PERIF_SETUP_H_
