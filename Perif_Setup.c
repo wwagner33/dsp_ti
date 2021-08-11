@@ -13,6 +13,15 @@
  *
  */
 
+/*
+ * Pinagem do trabalho 6
+ * PWM7: 72
+ * PWM8: 32
+ *
+ *
+ */
+
+
 
 
 #include "Perif_Setup.h"
@@ -44,25 +53,40 @@ void Setup_GPIO_Pwm(void) { // Enable EALLOW protected register acesso
     GpioCtrlRegs.GPAPUD.bit.GPIO0 = 1;
     //GpioCtrlRegs.GPADIR.bit.GPIO0 = 1; //valido apenas para GPIO 1 -. saida
     GpioCtrlRegs.GPACSEL1.bit.GPIO0 = GPIO_MUX_CPU1;
+
     //IO 0 - EPWM1B (J4 - 39) GPIO1
     GpioCtrlRegs.GPAGMUX1.bit.GPIO1 = 0;
     GpioCtrlRegs.GPAMUX1.bit.GPIO1 = 1;
     GpioCtrlRegs.GPAPUD.bit.GPIO1 = 1;
     //GpioCtrlRegs.GPADIR.bit.GPIO1 = 1; //valido apenas para GPIO 1 -. saida
     GpioCtrlRegs.GPACSEL1.bit.GPIO1 = GPIO_MUX_CPU1;
+
     //IO 0 - EPWM2A (J4 - 38) GPIO2
     GpioCtrlRegs.GPAGMUX1.bit.GPIO2 = 0; // grupo 0
     GpioCtrlRegs.GPAMUX1.bit.GPIO2 = 1; // coloca 1 para ser Pwm
     GpioCtrlRegs.GPAPUD.bit.GPIO2 = 1;
     //GpioCtrlRegs.GPADIR.bit.GPIO2 = 1; //valido apenas para GPIO 1 -. saida
-
     GpioCtrlRegs.GPACSEL1.bit.GPIO2 = GPIO_MUX_CPU1;
+
     //IO 0 - EPWM2B (J4 - 37) GPIO3
     GpioCtrlRegs.GPAGMUX1.bit.GPIO3 = 0;
     GpioCtrlRegs.GPAMUX1.bit.GPIO3 = 1;
     GpioCtrlRegs.GPAPUD.bit.GPIO3 = 1;
     //GpioCtrlRegs.GPADIR.bit.GPIO3 = 1; //valido apenas para GPIO 1 -. saida
     GpioCtrlRegs.GPACSEL1.bit.GPIO3 = GPIO_MUX_CPU1;
+
+    //IO 0 - EPWM7A DAC3 (J8 - 72) GPIO157
+    GpioCtrlRegs.GPEGMUX2.bit.GPIO157 = 0;
+    GpioCtrlRegs.GPEMUX2.bit.GPIO157 = 1;
+    GpioCtrlRegs.GPEPUD.bit.GPIO157 = 1;
+
+
+    //IO 0 - EPWM8A DAC1 (J4 - 32) GPIO159
+    GpioCtrlRegs.GPEGMUX2.bit.GPIO159 = 0;
+    GpioCtrlRegs.GPEMUX2.bit.GPIO159 = 1;
+    GpioCtrlRegs.GPEPUD.bit.GPIO159 = 1;
+
+
     EDIS;
 }
 void Setup_DAC(void)
@@ -205,6 +229,112 @@ void Setup_ePWM2(void){
     CpuSysRegs.PCLKCR0.bit.TBCLKSYNC = 1; // Habilitar Clock Contador
     EDIS;
 }
+
+//******************************************
+// EPW7
+
+//******************************************
+void Setup_ePWM7(void){
+
+
+    EALLOW;
+    CpuSysRegs.PCLKCR2.bit.EPWM7 = 1; //habilitar clock módulo
+    CpuSysRegs.PCLKCR0.bit.TBCLKSYNC = 0; // desabilitar Clock Contador
+    //TBPRD=fosc/(2*Fpwm) -1 (para dente de serra)
+    //TBCLK=fosc/2
+    //TBPRD=fosc/(2*Fpwm) *1/2 = fosc/(4*Fpwm) (para up/down)
+    // Fpwm = 1KHz => fosc = 200Mhz => TBRD = (200.10ˆ6)/(4*1*10ˆ3) = 50000
+    //EPwm2Regs.TBPRD = 50000; //period Fosc/2*Fpwm or Fosc/4*Fpwm
+
+
+    EPwm7Regs.TBPRD = 5000; // periodo (UP/DOWN) clock/4/fpwm
+    //EPwm7Regs.CMPA.bit.CMPA = 0;
+
+    EPwm7Regs.TBCTR = 0; // clear counter
+    EPwm7Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN; // counter up/down
+
+    EPwm7Regs.TBPHS.bit.TBPHS = 0;                 // Set Phase register to zero
+    EPwm7Regs.TBCTL.bit.SYNCOSEL = TB_CTR_ZERO;    // Sync down-stream module
+    EPwm7Regs.TBCTL.bit.PHSEN = TB_DISABLE; // Disable phase loading  // Master module
+    EPwm7Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1; // Prescale  // Clock ratio to SYSCLKOUT
+    EPwm7Regs.TBCTL.bit.CLKDIV = TB_DIV1;
+
+
+
+    EPwm7Regs.CMPA.bit.CMPA = EPwm7Regs.TBPRD >> 1; // duty 50%
+
+    EPwm7Regs.TBCTL.bit.PRDLD = TB_SHADOW;
+    EPwm7Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW; // Load registers every ZERO
+    EPwm7Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO_PRD;
+
+    // Set actions for EPWM7A
+    EPwm7Regs.AQCTLA.bit.PRD = AQ_NO_ACTION;
+    EPwm7Regs.AQCTLA.bit.ZRO = AQ_NO_ACTION;
+    EPwm7Regs.AQCTLA.bit.CAU = AQ_CLEAR; // set actions for epwm1A (CAU = se CPMA estiver subindo e se encontrar com AQCTLA executa um CLEAR)
+    EPwm7Regs.AQCTLA.bit.CAD = AQ_SET; // (CAD = se CPMA estiver Descendo e se encontrar com AQCTLA executa um SET)
+
+
+    EPwm7Regs.DBCTL.bit.POLSEL = DB_ACTV_HIC; // active Hi complementary
+    EPwm7Regs.DBCTL.bit.OUT_MODE = DB_FULL_ENABLE; // enable Dead-Band
+    EPwm7Regs.DBFED.bit.DBFED = 44; // time=DBxED*2*TBclk
+    EPwm7Regs.DBRED.bit.DBRED = 9;
+
+
+    CpuSysRegs.PCLKCR0.bit.TBCLKSYNC = 1; // Habilitar Clock Contador
+    EDIS;
+}
+
+//******************************************
+// EPW8
+
+//******************************************
+void Setup_ePWM8(void){
+    EALLOW;
+    CpuSysRegs.PCLKCR2.bit.EPWM8 = 1; //habilitar clock módulo
+    CpuSysRegs.PCLKCR0.bit.TBCLKSYNC = 0; // desabilitar Clock Contador
+    //TBPRD=fosc/(2*Fpwm) -1 (para dente de serra)
+    //TBCLK=fosc/2
+    //TBPRD=fosc/(2*Fpwm) *1/2 = fosc/(4*Fpwm) (para up/down)
+    // Fpwm = 1KHz => fosc = 200Mhz => TBRD = (200.10ˆ6)/(4*1*10ˆ3) = 50000
+    //EPwm2Regs.TBPRD = 50000; //period Fosc/2*Fpwm or Fosc/4*Fpwm
+
+
+    EPwm8Regs.TBPRD = 5000; // periodo (UP/DOWN) clock/4/fpwm
+    //EPwm8Regs.CMPA.bit.CMPA = 0;
+
+    EPwm8Regs.TBCTR = 0; // clear counter
+    EPwm8Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN; // counter up/down
+
+    EPwm8Regs.TBPHS.bit.TBPHS = 0;                 // Saidas sincronizadas. Valor deve ser alterado para gerar a defazagem,
+    EPwm8Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_IN;    // Sync down-stream module
+    EPwm8Regs.TBCTL.bit.PHSEN = TB_ENABLE;        // Enable phase loading  // Master module
+    EPwm8Regs.TBCTL.bit.PHSDIR = TB_DOWN;         // Phase Up/Down
+
+    EPwm8Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1; // Prescale  // Clock ratio to SYSCLKOUT
+    EPwm8Regs.TBCTL.bit.CLKDIV = TB_DIV1;
+
+    EPwm8Regs.CMPA.bit.CMPA = EPwm8Regs.TBPRD >> 1; // duty
+
+    EPwm8Regs.TBCTL.bit.PRDLD = TB_SHADOW;
+    EPwm8Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW; // Load registers every ZERO
+    EPwm8Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO_PRD;
+
+    // Set actions for EPWM7A
+    EPwm8Regs.AQCTLA.bit.PRD = AQ_NO_ACTION;
+    EPwm8Regs.AQCTLA.bit.ZRO = AQ_NO_ACTION;
+    EPwm8Regs.AQCTLA.bit.CAU = AQ_CLEAR; // set actions for epwm1A (CAU = se CPMA estiver subindo e se encontrar com AQCTLA executa um CLEAR)
+    EPwm8Regs.AQCTLA.bit.CAD = AQ_SET; // (CAD = se CPMA estiver Descendo e se encontrar com AQCTLA executa um SET)
+
+    EPwm8Regs.DBCTL.bit.POLSEL = DB_ACTV_HIC; // active Hi complementary
+    EPwm8Regs.DBCTL.bit.OUT_MODE = DB_FULL_ENABLE; // enable Dead-Band
+    EPwm8Regs.DBFED.bit.DBFED = 44; // time=DBxED*2*TBclk
+    EPwm8Regs.DBRED.bit.DBRED = 9;
+
+
+    CpuSysRegs.PCLKCR0.bit.TBCLKSYNC = 1; // Habilitar Clock Contador
+    EDIS;
+}
+
 //******************************************
 // EPW10
 //******************************************

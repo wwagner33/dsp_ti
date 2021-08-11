@@ -1,5 +1,5 @@
 #include "Perif_Setup.h"
-#//include "math.h" //somente para uso de comandos seno, coseno, etc.
+//#include "math.h" //somente para uso de comandos seno, coseno, etc.
 /*se usar __sin ou __cos eles executam direto nesta nossa placa sem
 precisar desta biblioteca sendo mais rápido para gerar a tabela */
 //uint32_t count = 0;
@@ -45,7 +45,7 @@ int main(void)
 
     // configura timer 0,1 e 2
     InitCpuTimers();
-    ConfigCpuTimer(&CpuTimer0, 200, 50);
+    ConfigCpuTimer(&CpuTimer0, 200, 50); //50
     CpuTimer0Regs.TCR.all = 0x4000;
     ConfigCpuTimer(&CpuTimer1, 200, 500000);
     CpuTimer1Regs.TCR.all = 0x4000;
@@ -63,6 +63,8 @@ int main(void)
     //configurar PWM
     Setup_ePWM1();
     Setup_ePWM2();
+    Setup_ePWM7();
+    Setup_ePWM8();
     Setup_ePWM10();
 
     //configura AD
@@ -73,8 +75,8 @@ int main(void)
     for (index = 0; index < 400; index++){
         //senotable[index] = (uint16_t)(1000.0*(1.0+ sin((6.28318531/400.0)*((float)index))));
         //cosenotable[index] = (uint16_t)(1000.0*(1.0+ cos((6.28318531/400.0)*((float)index)))
-        senotable[index] = (uint16_t)(1000.0*(1.0+ __sin((6.28318531/400.0)*((float)index))));
-        cossenotable[index] = (uint16_t)(1000.0*(1.0+ __cos((6.28318531/400.0)*((float)index))));
+        senotable[index] = (uint16_t)(2500.0*(1.0+ __sin((6.28318531/400.0)*((float)index)))); //Valor alterado para que haja a variacao de 0 até 5000
+        cossenotable[index] = (uint16_t)(2500.0*(1.0+ __cos((6.28318531/400.0)*((float)index)))); //Valor alterado para que haja a variacao de 0 até 5000
     }
     index=0;
     //GpioDataRegs.GPACLEAR.bit.GPIO14 = 1;
@@ -94,8 +96,8 @@ int main(void)
 }
 __interrupt void isr_timer0(void){
     indextable = (indextable == 399) ? 0 : (indextable+1);
-    DacbRegs.DACVALS.all = offset + senotable[indextable];
-    DacaRegs.DACVALS.all = cossenotable[indextable];
+    DacbRegs.DACVALS.all = offset + senotable[indextable]/2; //Para nao saturar com valores acima de 4096 aceitos nessa saida, foi dividido por 2. Alteracao relativa ao trabalho 6
+    DacaRegs.DACVALS.all = cossenotable[indextable]/2; //Para nao saturar com valores acima de 4096 aceitos nessa saida, foi dividido por 2. Alteracao relativa ao trabalho 6
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
 }
 __interrupt void isr_timer1(void){
@@ -107,9 +109,14 @@ __interrupt void isr_timer2(void){
 __interrupt void isr_adc(void){
     adc1 = AdcaResultRegs.ADCRESULT0;
     adc2 = AdcaResultRegs.ADCRESULT1;
+
     index = (index == 399) ? 0 : (index+1);
+   EPwm7Regs.CMPA.bit.CMPA = senotable[index];
+   EPwm8Regs.CMPA.bit.CMPA =  senotable[index]; //cossenotable[index];
+
     plotseno[index] = *adcseno;
     plotcosseno[index] = *adccosseno;
+
     AdcaRegs.ADCINTFLGCLR.bit.ADCINT1 = 1; //clear INT1 flag
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
 }
