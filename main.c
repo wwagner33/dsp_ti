@@ -1,68 +1,65 @@
 #include "Perif_Setup.h"
-//#include "math.h" //somente para uso de comandos seno, coseno, etc.
-/*se usar __sin ou __cos eles executam direto nesta nossa placa sem
-precisar desta biblioteca sendo mais rápido para gerar a tabela */
-//uint32_t count = 0;
+#include "sogi.h"
+
 __interrupt void isr_timer0(void);
-__interrupt void isr_timer1(void);
-__interrupt void isr_timer2(void);
+
 __interrupt void isr_adc(void);
-uint16_t index = 0, indextable = 0, offset = 0, senotable[400], cossenotable[400];
-uint16_t adc1 = 0;
-uint16_t adc2 = 0;
-uint16_t plotseno [400];
-uint16_t *adcseno = &adc1;
-int16_t plotcosseno [400];
-uint16_t *adccosseno = &adc2;
-/**
-* main.c
-*/
+
+//variaveis propostas pelo professor
+uint32_t count=0,index=0;
+
+SPLL_SOGI v_pll;
+
+float vrede = 0;
+float vsync = 0;
+float phase = 0;
+float ampl = 0.5;
+float plot1[512],plot2[512]; //para tensao da rede e tensao sincronizada (saida do PLL)
+
+float *padc1 = &vrede;
+float *padc2 = &vsync;
+
+
 int main(void)
 {
     InitSysCtrl(); //Initialize System
+
     DINT; // Disable CPU interrupts
+
     InitPieCtrl(); // Initialize the PIE control registers to their default state
+
     IER = 0x0000; // Disable CPU interrupts
     IFR = 0x0000; // Clear all CPU interrupt flags
 
     InitPieVectTable(); //Initialize o PIE Vector table
 
+    // Setup dos GPIO
+    Setup_GPIO();
+    Setup_GPIO_Pwm();
+
     // interrupcoes
+
     EALLOW; // habilita acesso aos registradores protegidos
     PieVectTable.TIMER0_INT = &isr_timer0;
     PieVectTable.ADCA1_INT = &isr_adc;
+
     PieCtrlRegs.PIEIER1.bit.INTx7 = 1; // Timer 0
     PieCtrlRegs.PIEIER1.bit.INTx1 = 1; // ADC
-    PieVectTable.TIMER1_INT = &isr_timer1;
-    PieVectTable.TIMER2_INT = &isr_timer2;
+
     EDIS; // desabilita acesso aos registradores protegidos
     // IER = 1; //habilita a coluna 1
     // IER = 0x10 //desabilita a coluna 1 e habilita a coluna 2
 
     IER |= M_INT1;
-    IER |= M_INT13; //enable INT13 in IER
-    IER |= M_INT14;
 
-    // configura timer 0,1 e 2
+    // configura timer
     InitCpuTimers();
-    ConfigCpuTimer(&CpuTimer0, 200, 50); //50
+    ConfigCpuTimer(&CpuTimer0, 200, 1000000);//timer0 usado para sinalizacao
     CpuTimer0Regs.TCR.all = 0x4000;
-    ConfigCpuTimer(&CpuTimer1, 200, 500000);
-    CpuTimer1Regs.TCR.all = 0x4000;
-    ConfigCpuTimer(&CpuTimer2, 200, 1000000);
-    CpuTimer2Regs.TCR.all = 0x4000;
 
-    // Setup dos GPIO
-    Setup_GPIO_RED();
-    Setup_GPIO_Blue();
-    Setup_GPIO_Pwm();
-
-    //Configura DAC
-    Setup_DAC();
 
     //configurar PWM
     Setup_ePWM1();
-    Setup_ePWM2();
     Setup_ePWM7();
     Setup_ePWM8();
     Setup_ePWM10();
@@ -70,53 +67,60 @@ int main(void)
     //configura AD
     Setup_ADC();
 
-    //GpioDataRegs.GPASET.bit.GPIO14 = 1;
-    //criar tabela da senoide
-    for (index = 0; index < 400; index++){
-        //senotable[index] = (uint16_t)(1000.0*(1.0+ sin((6.28318531/400.0)*((float)index))));
-        //cosenotable[index] = (uint16_t)(1000.0*(1.0+ cos((6.28318531/400.0)*((float)index)))
-        senotable[index] = (uint16_t)(2500.0*(1.0+ __sin((6.28318531/400.0)*((float)index)))); //Valor alterado para que haja a variacao de 0 até 5000
-        cossenotable[index] = (uint16_t)(2500.0*(1.0+ __cos((6.28318531/400.0)*((float)index)))); //Valor alterado para que haja a variacao de 0 até 5000
-    }
-    index=0;
-    //GpioDataRegs.GPACLEAR.bit.GPIO14 = 1;
+    //Configura DAC
+    Setup_DAC();
+
+    //configuracao do SOGI
+    SOGI_init(60,32.5520833E-06,&v_pll); //valores caluculados usando o documento do Solar. o valor 60 é a frequencia que se quer sintonizar, ou seja, 60Hz
+    SOGI_coeff_update(32.5520833E-06,376.99112,0.7,&v_pll);
+
     EINT; // Enable Global interrupt INTM
     ERTM; // Enable Global realtime interrupt DBGM
-    GpioDataRegs.GPADAT.bit.GPIO31 = 1;
-    GpioDataRegs.GPBDAT.bit.GPIO34 = 0;
 
-    // while(1){
-    // for (count = 0; count < 0x00FFFFFF; count++) {
-    //
-    // }
-    // GpioDataRegs.GPBTOGGLE.bit.GPIO34 = 1;
-    // GpioDataRegs.GPATOGGLE.bit.GPIO31 = 1;
-    // }
+
+    GpioDataRegs.GPADAT.bit.GPIO31 = 1;  //Led azul
+    GpioDataRegs.GPBDAT.bit.GPIO34 = 0; //Led vermelho
+
+     while(1){
+     for (count = 0; count < 0x00FFFFFF; count++) {
+
+     }
+     GpioDataRegs.GPBTOGGLE.bit.GPIO34 = 1;
+     }
 
 }
 __interrupt void isr_timer0(void){
-    indextable = (indextable == 399) ? 0 : (indextable+1);
-    DacbRegs.DACVALS.all = offset + senotable[indextable]/2; //Para nao saturar com valores acima de 4096 aceitos nessa saida, foi dividido por 2. Alteracao relativa ao trabalho 6
-    DacaRegs.DACVALS.all = cossenotable[indextable]/2; //Para nao saturar com valores acima de 4096 aceitos nessa saida, foi dividido por 2. Alteracao relativa ao trabalho 6
+    GpioDataRegs.GPATOGGLE.bit.GPIO31 = 1; //Led azul
+
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
 }
-__interrupt void isr_timer1(void){
-    GpioDataRegs.GPATOGGLE.bit.GPIO31 = 1;
-}
-__interrupt void isr_timer2(void){
-    GpioDataRegs.GPBTOGGLE.bit.GPIO34 = 1;
-}
+
 __interrupt void isr_adc(void){
-    adc1 = AdcaResultRegs.ADCRESULT0;
-    adc2 = AdcaResultRegs.ADCRESULT1;
+    GpioDataRegs.GPADAT.bit.GPIO14 = 1; //incluido para o calculo do tempo gasto
 
-    index = (index == 399) ? 0 : (index+1);
-   EPwm7Regs.CMPA.bit.CMPA = senotable[index];
-   EPwm8Regs.CMPA.bit.CMPA =  senotable[index]; //cossenotable[index];
+    vrede = 0.0005*((int)AdcaResultRegs.ADCRESULT0 - 0x7FF); //recebe leitura do sinal da rede através do ResultReg e o valor 0.0005 deixa a entrada da rede variando entre -1 e 1
 
-    plotseno[index] = *adcseno;
-    plotcosseno[index] = *adccosseno;
+    v_pll.u[0] = vrede;//valor da rede vai para o PLL atraves do u (entrada do PLL)
+    SPLL_SOGI_CALC(&v_pll); //passa o valor para a funcao de PLL
+
+    vsync = v_pll.sin_; //vsync foi colocado aqui para que possamos ve-lo em nosso plot
+
+    //phase - fase que se quer impor; theta é o angulo de defasagem da rede que se quer ler;ampl - aplitude que se quer impor
+    //depois o valor deve ser normalizado para ficar dentro do intervalo de CMPA (0 a PRD=3255). No caso foi colocado 1627 (metade do PRD), pois o intervalo do valor do seno fica entre 0 e 2
+
+    EPwm7Regs.CMPA.bit.CMPA = (uint16_t) (1627.0 *(1.0 + ampl * __sin(v_pll.theta[1] + phase)));
+
+    EALLOW;
+    //manda o valor da senoide calculada para o DA. como o registrador do DA é de 12bit - vai de 0 a 4096 -  e foi usado a metade para deixar o valor normalizado, ja que o seno varia de 0 a 2
+    DacbRegs.DACVALS.bit.DACVALS = (uint16_t)(2047.0 * (1.0 + ampl * __sin(v_pll.theta[1] + phase)));
+    EDIS;
+
+    plot1[index] = *padc1;
+    plot2[index] = *padc2;
+    index = (index == 511) ? 0: (index+1);
 
     AdcaRegs.ADCINTFLGCLR.bit.ADCINT1 = 1; //clear INT1 flag
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
+
+    GpioDataRegs.GPADAT.bit.GPIO14 = 0; //incluido para o calculo do tempo gasto
 }
