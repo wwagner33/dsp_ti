@@ -1,0 +1,78 @@
+/*
+ * CLA_TASKS.cla
+ *
+ *  Created on: 24 de ago de 2021
+ *      Author: Wellington e Paulo
+ */
+
+#include "CLA.h"
+
+/************************************************************************
+ * Task: CLA Task 1
+************************************************************************/
+
+__interrupt void CLA1Task1(void){
+    GpioDataRegs.GPADAT.bit.GPIO15=1;
+
+    vrede_CLA = 0.0005*((int)AdcaResultRegs.ADCRESULT1 - 0x7FF); //recebe leitura do sinal da rede através do ResultReg e o valor 0.0005 deixa a entrada da rede variando entre -1 e 1
+
+    cla1_pll.u[0]=vrede_CLA;
+
+    //********************Inicio do codigo da funcao SPLL_SOGI_CALC ***********************
+
+    // Update the cla1_pll.u[0] with the grid value before calling this routine
+    // Orthogonal Signal Generator   //
+    cla1_pll.osg_u[0] = (cla1_pll.osg_coeff.osg_b0*(cla1_pll.u[0]-cla1_pll.u[2])) + (cla1_pll.osg_coeff.osg_a1*cla1_pll.osg_u[1]) + (cla1_pll.osg_coeff.osg_a2*cla1_pll.osg_u[2]);
+    cla1_pll.osg_u[0] = (cla1_pll.osg_coeff.osg_b0*(cla1_pll.u[0]-cla1_pll.u[2])) + (cla1_pll.osg_coeff.osg_a1*cla1_pll.osg_u[1]) + (cla1_pll.osg_coeff.osg_a2*cla1_pll.osg_u[2]);
+    cla1_pll.osg_u[2] = cla1_pll.osg_u[1];
+    cla1_pll.osg_u[1] = cla1_pll.osg_u[0];
+    cla1_pll.osg_qu[0] = (cla1_pll.osg_coeff.osg_qb0*cla1_pll.u[0]) + (cla1_pll.osg_coeff.osg_qb1*cla1_pll.u[1]) + (cla1_pll.osg_coeff.osg_qb2*cla1_pll.u[2]) + (cla1_pll.osg_coeff.osg_a1*cla1_pll.osg_qu[1]) + (cla1_pll.osg_coeff.osg_a2*cla1_pll.osg_qu[2]);
+    cla1_pll.osg_qu[2] = cla1_pll.osg_qu[1];
+    cla1_pll.osg_qu[1] = cla1_pll.osg_qu[0];
+    cla1_pll.u[2] = cla1_pll.u[1];
+    cla1_pll.u[1] = cla1_pll.u[0];
+    // Park Transform from alpha beta to d-q axis            //
+    cla1_pll.u_Q[0] = (cla1_pll.cos_*cla1_pll.osg_u[0]) + (cla1_pll.sin_*cla1_pll.osg_qu[0]);
+    cla1_pll.u_D[0] = (cla1_pll.cos_*cla1_pll.osg_qu[0]) - (cla1_pll.sin_*cla1_pll.osg_u[0]);
+    // Loop Filter                     //
+    cla1_pll.ylf[0]=cla1_pll.ylf[1] + (cla1_pll.lpf_coeff.B0_lf*cla1_pll.u_Q[0]) + (cla1_pll.lpf_coeff.B1_lf*cla1_pll.u_Q[1]);
+    cla1_pll.ylf[1]=cla1_pll.ylf[0];
+    cla1_pll.u_Q[1]=cla1_pll.u_Q[0];
+
+    cla1_pll.fo=cla1_pll.fn+cla1_pll.ylf[0];
+    cla1_pll.theta[0]=cla1_pll.theta[1] + (cla1_pll.fo*cla1_pll.delta_T)*6.2831853072;
+
+    if(cla1_pll.theta[0] > 6.2831853072)
+        cla1_pll.theta[0] -= 6.2831853072;
+    else if(cla1_pll.theta[0] < -6.2831853072)
+        cla1_pll.theta[0] += 6.2831853072;
+
+    cla1_pll.theta[1] = cla1_pll.theta[0];
+
+    //As funcoes _sin e _cos (sao do PNU) nao sao acessiveis pelo CLA. Elas devem ser substituidas pelo=as funcoes semelhantes existentes para o proprio CLA
+     //Antes:
+//    cla1_pll.sin_ = __sin(cla1_pll.theta[0]);
+//    cla1_pll.cos_ = __cos(cla1_pll.theta[0]);
+
+    //Depois:
+    cla1_pll.sin_ = CLAsin(cla1_pll.theta[0]);
+    cla1_pll.cos_ = CLAcos(cla1_pll.theta[0]);
+
+    //********************Fim do codigo da funcao SPLL_SOGI_CALC ***********************
+
+    //Manda os dados do CLA para o PWA8
+
+    EPwm8Regs.CMPA.bit.CMPA= (uint16_t) (1627.0 * (1.0 * ampl_CLA * CLAsin(cla1_pll.theta[0] + phase_CLA)));
+
+    GpioDataRegs.GPADAT.bit.GPIO15=0;
+
+    asm("  MSTOP"); //To indicate the end of task
+}
+
+__interrupt void CLA1Task2(void){}
+__interrupt void CLA1Task3(void){}
+__interrupt void CLA1Task4(void){}
+__interrupt void CLA1Task5(void){}
+__interrupt void CLA1Task6(void){}
+__interrupt void CLA1Task7(void){}
+__interrupt void CLA1Task8(void){}

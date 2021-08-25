@@ -1,8 +1,0 @@
-
-**** Build of configuration Debug for project Trabalho01 ****
-
-/Applications/ti/ccs1031/ccs/utils/bin/gmake -k -j 3 all -O 
- 
-gmake[1]: 'Trabalho01.out' is up to date.
-
-**** Build Finished ****
