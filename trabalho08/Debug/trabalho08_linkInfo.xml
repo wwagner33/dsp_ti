@@ -2,7 +2,7 @@
 <link_info>
    <banner>TMS320C2000 Linker PC v20.2.5.LTS</banner>
    <copyright>Copyright (c) 1996-2018 Texas Instruments Incorporated</copyright>
-   <link_time>0x6126bdd5</link_time>
+   <link_time>0x6126cb45</link_time>
    <link_errors>0x0</link_errors>
    <output_file>trabalho08.out</output_file>
    <entry_point>
@@ -457,35 +457,35 @@
       <object_component id="oc-bb">
          <name>.ebss</name>
          <uninitialized>true</uninitialized>
-         <run_address>0xd088</run_address>
+         <run_address>0x9088</run_address>
          <size>0x18</size>
          <input_file_ref idref="fl-6"/>
       </object_component>
       <object_component id="oc-158">
          <name>.ebss</name>
          <uninitialized>true</uninitialized>
-         <run_address>0xd000</run_address>
+         <run_address>0x9000</run_address>
          <size>0x88</size>
          <input_file_ref idref="fl-10"/>
       </object_component>
       <object_component id="oc-192">
          <name>.ebss</name>
          <uninitialized>true</uninitialized>
-         <run_address>0xd0a0</run_address>
+         <run_address>0x90a0</run_address>
          <size>0x6</size>
          <input_file_ref idref="fl-2c"/>
       </object_component>
       <object_component id="oc-1a9">
          <name>.ebss:__lock</name>
          <uninitialized>true</uninitialized>
-         <run_address>0xd0a6</run_address>
+         <run_address>0x90a6</run_address>
          <size>0x2</size>
          <input_file_ref idref="fl-2d"/>
       </object_component>
       <object_component id="oc-1b6">
          <name>.ebss:__unlock</name>
          <uninitialized>true</uninitialized>
-         <run_address>0xd0a8</run_address>
+         <run_address>0x90a8</run_address>
          <size>0x2</size>
          <input_file_ref idref="fl-2d"/>
       </object_component>
@@ -2355,7 +2355,7 @@
       </logical_group>
       <logical_group id="lg-9" display="no" color="cyan">
          <name>.ebss</name>
-         <run_address>0xd000</run_address>
+         <run_address>0x9000</run_address>
          <size>0xaa</size>
          <contents>
             <object_component_ref idref="oc-bb"/>
@@ -5348,10 +5348,19 @@
          <page_id>0x1</page_id>
          <origin>0x9000</origin>
          <length>0x800</length>
-         <used_space>0x0</used_space>
-         <unused_space>0x800</unused_space>
+         <used_space>0xaa</used_space>
+         <unused_space>0x756</unused_space>
          <attributes>RWIX</attributes>
          <usage_details>
+            <allocated_space>
+               <start_address>0x9000</start_address>
+               <size>0xaa</size>
+               <logical_group_ref idref="lg-9"/>
+            </allocated_space>
+            <available_space>
+               <start_address>0x90aa</start_address>
+               <size>0x756</size>
+            </available_space>
          </usage_details>
       </memory_area>
       <memory_area display="yes" color="green">
@@ -5390,19 +5399,10 @@
          <page_id>0x1</page_id>
          <origin>0xd000</origin>
          <length>0x1000</length>
-         <used_space>0xaa</used_space>
-         <unused_space>0xf56</unused_space>
+         <used_space>0x0</used_space>
+         <unused_space>0x1000</unused_space>
          <attributes>RWIX</attributes>
          <usage_details>
-            <allocated_space>
-               <start_address>0xd000</start_address>
-               <size>0xaa</size>
-               <logical_group_ref idref="lg-9"/>
-            </allocated_space>
-            <available_space>
-               <start_address>0xd0aa</start_address>
-               <size>0xf56</size>
-            </available_space>
          </usage_details>
       </memory_area>
       <memory_area display="yes" color="green">
@@ -6173,17 +6173,17 @@
       </symbol>
       <symbol id="sm-1bf">
          <name>_CpuTimer2</name>
-         <value>0xd098</value>
+         <value>0x9098</value>
          <object_component_ref idref="oc-bb"/>
       </symbol>
       <symbol id="sm-1c0">
          <name>_CpuTimer0</name>
-         <value>0xd088</value>
+         <value>0x9088</value>
          <object_component_ref idref="oc-bb"/>
       </symbol>
       <symbol id="sm-1c1">
          <name>_CpuTimer1</name>
-         <value>0xd090</value>
+         <value>0x9090</value>
          <object_component_ref idref="oc-bb"/>
       </symbol>
       <symbol id="sm-1c2">
@@ -7688,7 +7688,7 @@
       </symbol>
       <symbol id="sm-5d5">
          <name>_phase</name>
-         <value>0xd008</value>
+         <value>0x9008</value>
          <object_component_ref idref="oc-158"/>
       </symbol>
       <symbol id="sm-5d6">
@@ -7738,7 +7738,7 @@
       </symbol>
       <symbol id="sm-5e7">
          <name>_vrede</name>
-         <value>0xd004</value>
+         <value>0x9004</value>
          <object_component_ref idref="oc-158"/>
       </symbol>
       <symbol id="sm-5e8">
@@ -7753,17 +7753,17 @@
       </symbol>
       <symbol id="sm-5ea">
          <name>_vsync</name>
-         <value>0xd006</value>
+         <value>0x9006</value>
          <object_component_ref idref="oc-158"/>
       </symbol>
       <symbol id="sm-5eb">
          <name>_v_pll</name>
-         <value>0xd040</value>
+         <value>0x9040</value>
          <object_component_ref idref="oc-158"/>
       </symbol>
       <symbol id="sm-5ec">
          <name>_index</name>
-         <value>0xd002</value>
+         <value>0x9002</value>
          <object_component_ref idref="oc-158"/>
       </symbol>
       <symbol id="sm-5ed">
@@ -7773,7 +7773,7 @@
       </symbol>
       <symbol id="sm-5ee">
          <name>_ampl</name>
-         <value>0xd00a</value>
+         <value>0x900a</value>
          <object_component_ref idref="oc-158"/>
       </symbol>
       <symbol id="sm-5ef">
@@ -7788,12 +7788,12 @@
       </symbol>
       <symbol id="sm-5f2">
          <name>_padc1</name>
-         <value>0xd00c</value>
+         <value>0x900c</value>
          <object_component_ref idref="oc-158"/>
       </symbol>
       <symbol id="sm-5f3">
          <name>_padc2</name>
-         <value>0xd00e</value>
+         <value>0x900e</value>
          <object_component_ref idref="oc-158"/>
       </symbol>
       <symbol id="sm-5f4">
@@ -7803,7 +7803,7 @@
       </symbol>
       <symbol id="sm-5f6">
          <name>_count</name>
-         <value>0xd000</value>
+         <value>0x9000</value>
          <object_component_ref idref="oc-158"/>
       </symbol>
       <symbol id="sm-604">
@@ -7883,12 +7883,12 @@
       </symbol>
       <symbol id="sm-6ac">
          <name>___TI_cleanup_ptr</name>
-         <value>0xd0a2</value>
+         <value>0x90a2</value>
          <object_component_ref idref="oc-192"/>
       </symbol>
       <symbol id="sm-6ad">
          <name>___TI_enable_exit_profile_output</name>
-         <value>0xd0a0</value>
+         <value>0x90a0</value>
          <object_component_ref idref="oc-192"/>
       </symbol>
       <symbol id="sm-6ae">
@@ -7898,17 +7898,17 @@
       </symbol>
       <symbol id="sm-6b0">
          <name>___TI_dtors_ptr</name>
-         <value>0xd0a4</value>
+         <value>0x90a4</value>
          <object_component_ref idref="oc-192"/>
       </symbol>
       <symbol id="sm-6c4">
          <name>__unlock</name>
-         <value>0xd0a8</value>
+         <value>0x90a8</value>
          <object_component_ref idref="oc-1b6"/>
       </symbol>
       <symbol id="sm-6c5">
          <name>__lock</name>
-         <value>0xd0a6</value>
+         <value>0x90a6</value>
          <object_component_ref idref="oc-1a9"/>
       </symbol>
       <symbol id="sm-6c6">
