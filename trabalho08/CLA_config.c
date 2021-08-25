@@ -32,7 +32,15 @@ void CLA1_ConfigCLAMemory(void){
     MemCfgRegs.LSxMSEL.bit.MSEL_LS5=1;
     MemCfgRegs.LSxCLAPGM.bit.CLAPGM_LS5=1;
 
-    //Select LS0RAM and LS1RAM to be the memory space for the CLA(10
+//Memoria de Programa
+    //Select LS5RAM to be the memory space for the CLA (1)  or CPU (0)
+    // First configure the CLA to be the master for LS5 and then set the space to be a program block (1)
+    MemCfgRegs.LSxMSEL.bit.MSEL_LS5=1;
+    MemCfgRegs.LSxCLAPGM.bit.CLAPGM_LS5=1;
+
+//Memoria para dados
+
+    //Select LS0RAM and LS1RAM to be the memory space for the CLA(1)
     //First configure the CLA to be the master for LS0/LS1 and then set the space to be a data block (0)
     MemCfgRegs.LSxMSEL.bit.MSEL_LS0=1;
     MemCfgRegs.LSxCLAPGM.bit.CLAPGM_LS0=0;

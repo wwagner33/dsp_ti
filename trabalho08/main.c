@@ -161,23 +161,23 @@ __interrupt void CLA1_isr1(void){
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP11;
 }
 __interrupt void CLA1_isr2(void){
-   // asm("ESTOP0");
+    asm("  ESTOP0");
 }
 __interrupt void CLA1_isr3(void){
-    //asm("ESTOP0");
+    asm("  ESTOP0");
 }
 __interrupt void CLA1_isr4(void){
-    //asm("ESTOP0");
+   asm("  ESTOP0");
 }
 __interrupt void CLA1_isr5(void){
-   // asm("ESTOP0");
+   asm("  ESTOP0");
 }
 __interrupt void CLA1_isr6(void){
-    // asm("ESTOP0");
+    asm("  ESTOP0");
 }
 __interrupt void CLA1_isr7(void){
-    asm("ESTOP0");
+    asm("  ESTOP0");
 }
 __interrupt void CLA1_isr8(void){
-    asm("ESTOP0");
+    asm("  ESTOP0");
 }

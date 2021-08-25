@@ -66,5 +66,13 @@ __interrupt void CLA1Task1(void){
 
     GpioDataRegs.GPADAT.bit.GPIO15=0;
 
-    asm("MSTOP"); //To indicate the end of task
+    asm("  MSTOP"); //To indicate the end of task
 }
+
+__interrupt void CLA1Task2(void){}
+__interrupt void CLA1Task3(void){}
+__interrupt void CLA1Task4(void){}
+__interrupt void CLA1Task5(void){}
+__interrupt void CLA1Task6(void){}
+__interrupt void CLA1Task7(void){}
+__interrupt void CLA1Task8(void){}
