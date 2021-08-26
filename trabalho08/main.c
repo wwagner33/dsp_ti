@@ -15,9 +15,9 @@ float ampl = 0.5;
 
 volatile SPLL_SOGI cla1_pll;
 volatile float vrede_CLA;
-volatile float phase_CLA=0;
-volatile float ampl_CLA=0.5;
-volatile uint32_t count_task=0;
+volatile float phase_CLA = 0;
+volatile float ampl_CLA = 0.5;
+volatile uint32_t count_task = 0;
 
 #pragma DATA_SECTION(vrede_CLA,"Cla1ToCpuMsgRAM");
 
@@ -35,8 +35,7 @@ float *padc2 = &vsync;
 __interrupt void isr_timer0(void);
 __interrupt void isr_adc(void);
 
-int main(void)
-{
+int main(void) {
     InitSysCtrl(); //Initialize System
 
     DINT; // Disable CPU interrupts
@@ -91,11 +90,11 @@ int main(void)
 
     //configuracao do SOGI
     SOGI_init(60,32.5520833E-06,&v_pll); //valores caluculados usando o documento do Solar. o valor 60 sao a frequencia que se quer sintonizar, ou seja, 60Hz
-    SOGI_coeff_update(32.5520833E-06,376.99112,0.7,&v_pll);
+    SOGI_coeff_update(32.5520833E-06, 376.99112, 0.7,&v_pll);
 
     //Atualiza variaveis para o CLA
-    SOGI_init(60,32.5520833E-06,&cla1_pll); //valores caluculados usando o documento do Solar. o valor 60 sao a frequencia que se quer sintonizar, ou seja, 60Hz
-    SOGI_coeff_update(32.5520833E-06,376.99112,0.7,&cla1_pll);
+    SOGI_init(60,32.5520833E-06, &cla1_pll); //valores caluculados usando o documento do Solar. o valor 60 sao a frequencia que se quer sintonizar, ou seja, 60Hz
+    SOGI_coeff_update(32.5520833E-06, 376.99112, 0.7,&cla1_pll);
 
     EINT; // Enable Global interrupt INTM
     ERTM; // Enable Global realtime interrupt DBGM
@@ -129,7 +128,7 @@ __interrupt void isr_adc(void){
 
     vsync = v_pll.sin_; //vsync foi colocado aqui para que possamos ve-lo em nosso plot
 
-    //phase - fase que se quer impor; theta é o angulo de defasagem da rede que se quer ler;ampl - aplitude que se quer impor
+    //phase - fase que se quer impor; theta é o angulo de defasagem da rede que se quer ler: ampl - aplitude que se quer impor
     //depois o valor deve ser normalizado para ficar dentro do intervalo de CMPA (0 a PRD=3255). No caso foi colocado 1627 (metade do PRD), pois o intervalo do valor do seno fica entre 0 e 2
 
     EPwm7Regs.CMPA.bit.CMPA = (uint16_t) (1627.0 *(1.0 + ampl * __sin(v_pll.theta[1] + phase)));
@@ -137,7 +136,7 @@ __interrupt void isr_adc(void){
 
     //Essa parte abaixo foi removida para que se possa ter o mesmo tempo no CLA e no AD
 //    EALLOW;
-//    //manda o valor da senoide calculada para o DA. como o registrador do DA é de 12bit - vai de 0 a 4096 -  e foi usado a metade para deixar o valor normalizado, ja que o seno varia de 0 a 2
+//    //manda o valor da senoide calculada para o DA. como o registrador do DA sao de 12bit - vai de 0 a 4096 -  e foi usado a metade para deixar o valor normalizado, ja que o seno varia de 0 a 2
 //    DacbRegs.DACVALS.bit.DACVALS = (uint16_t)(2047.0 * (1.0 + ampl * __sin(v_pll.theta[1] + phase)));
 //    EDIS;
 

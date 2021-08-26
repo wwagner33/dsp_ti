@@ -93,7 +93,6 @@ void Setup_GPIO_Pwm(void) { // Enable EALLOW protected register acesso
     GpioCtrlRegs.GPACSEL2.bit.GPIO14 = GPIO_MUX_CPU1;
 
     //GPIO 15 (J8 - 73) configurado para trabalhar com o CLA
-    //GPIO 14 (J8 - 74) - Usado para sinalizacao ou seja para medir o tempo de execucao da funcao pin: 74
     GpioCtrlRegs.GPAGMUX1.bit.GPIO15 = 0;
     GpioCtrlRegs.GPAMUX1.bit.GPIO15 = 0;
     GpioCtrlRegs.GPAPUD.bit.GPIO15 = 1;

@@ -12,11 +12,13 @@
 ************************************************************************/
 
 __interrupt void CLA1Task1(void){
-    GpioDataRegs.GPADAT.bit.GPIO15=1;
+
+    count_task++;
+    GpioDataRegs.GPADAT.bit.GPIO15 = 1;
 
     vrede_CLA = 0.0005*((int)AdcaResultRegs.ADCRESULT1 - 0x7FF); //recebe leitura do sinal da rede através do ResultReg e o valor 0.0005 deixa a entrada da rede variando entre -1 e 1
 
-    cla1_pll.u[0]=vrede_CLA;
+    cla1_pll.u[0] = vrede_CLA;
 
     //********************Inicio do codigo da funcao SPLL_SOGI_CALC ***********************
 
@@ -31,16 +33,18 @@ __interrupt void CLA1Task1(void){
     cla1_pll.osg_qu[1] = cla1_pll.osg_qu[0];
     cla1_pll.u[2] = cla1_pll.u[1];
     cla1_pll.u[1] = cla1_pll.u[0];
+
     // Park Transform from alpha beta to d-q axis            //
     cla1_pll.u_Q[0] = (cla1_pll.cos_*cla1_pll.osg_u[0]) + (cla1_pll.sin_*cla1_pll.osg_qu[0]);
     cla1_pll.u_D[0] = (cla1_pll.cos_*cla1_pll.osg_qu[0]) - (cla1_pll.sin_*cla1_pll.osg_u[0]);
-    // Loop Filter                     //
-    cla1_pll.ylf[0]=cla1_pll.ylf[1] + (cla1_pll.lpf_coeff.B0_lf*cla1_pll.u_Q[0]) + (cla1_pll.lpf_coeff.B1_lf*cla1_pll.u_Q[1]);
-    cla1_pll.ylf[1]=cla1_pll.ylf[0];
-    cla1_pll.u_Q[1]=cla1_pll.u_Q[0];
 
-    cla1_pll.fo=cla1_pll.fn+cla1_pll.ylf[0];
-    cla1_pll.theta[0]=cla1_pll.theta[1] + (cla1_pll.fo*cla1_pll.delta_T)*6.2831853072;
+    // Loop Filter                     //
+    cla1_pll.ylf[0] = cla1_pll.ylf[1] + (cla1_pll.lpf_coeff.B0_lf*cla1_pll.u_Q[0]) + (cla1_pll.lpf_coeff.B1_lf*cla1_pll.u_Q[1]);
+    cla1_pll.ylf[1] = cla1_pll.ylf[0];
+    cla1_pll.u_Q[1] = cla1_pll.u_Q[0];
+
+    cla1_pll.fo = cla1_pll.fn+cla1_pll.ylf[0];
+    cla1_pll.theta[0] = cla1_pll.theta[1] + (cla1_pll.fo*cla1_pll.delta_T)*6.2831853072;
 
     if(cla1_pll.theta[0] > 6.2831853072)
         cla1_pll.theta[0] -= 6.2831853072;
@@ -49,7 +53,7 @@ __interrupt void CLA1Task1(void){
 
     cla1_pll.theta[1] = cla1_pll.theta[0];
 
-    //As funcoes _sin e _cos (sao do PNU) nao sao acessiveis pelo CLA. Elas devem ser substituidas pelo=as funcoes semelhantes existentes para o proprio CLA
+    //As funcoes _sin e _cos (sao do PNU) nao sao acessiveis pelo CLA. Elas devem ser substituidas pelas funcoes semelhantes existentes para o proprio CLA
      //Antes:
 //    cla1_pll.sin_ = __sin(cla1_pll.theta[0]);
 //    cla1_pll.cos_ = __cos(cla1_pll.theta[0]);
@@ -62,9 +66,10 @@ __interrupt void CLA1Task1(void){
 
     //Manda os dados do CLA para o PWA8
 
-    EPwm8Regs.CMPA.bit.CMPA= (uint16_t) (1627.0 * (1.0 * ampl_CLA * CLAsin(cla1_pll.theta[0] + phase_CLA)));
+    EPwm8Regs.CMPA.bit.CMPA = (uint16_t) (1627.0 * (1.0 + ampl_CLA * CLAsin(cla1_pll.theta[1] + phase_CLA)));
 
-    GpioDataRegs.GPADAT.bit.GPIO15=0;
+
+    GpioDataRegs.GPADAT.bit.GPIO15 = 0;
 
     asm("  MSTOP"); //To indicate the end of task
 }
